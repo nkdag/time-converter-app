@@ -1,30 +1,30 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg: #fff6f8;
-  --panel: rgba(255, 255, 255, 0.84);
-  --panel-solid: #ffffff;
-  --field: #fff8fa;
-  --ink: #2c1720;
-  --app-muted: #7c5d68;
+  --bg: #fefae0;
+  --panel: rgba(254, 250, 224, 0.82);
+  --panel-solid: #fffdf0;
+  --field: #fffdf0;
+  --ink: #283618;
+  --app-muted: #606c38;
   --muted: oklch(0.97 0 0);
-  --soft: #ffe8ee;
-  --line: rgba(117, 42, 65, 0.12);
-  --line-strong: rgba(117, 42, 65, 0.22);
-  --blue: #d94872;
-  --cyan: #ef7d98;
-  --green: #cf4f70;
-  --amber: #d46a52;
-  --red: #a83a50;
-  --shadow: 0 14px 38px rgba(117, 42, 65, 0.08);
-  --shadow-soft: 0 8px 22px rgba(117, 42, 65, 0.06);
+  --soft: #f5ecd0;
+  --line: rgba(40, 54, 24, 0.13);
+  --line-strong: rgba(40, 54, 24, 0.24);
+  --blue: #606c38;
+  --cyan: #dda15e;
+  --green: #606c38;
+  --amber: #dda15e;
+  --red: #bc6c25;
+  --shadow: 0 14px 38px rgba(40, 54, 24, 0.08);
+  --shadow-soft: 0 8px 22px rgba(40, 54, 24, 0.06);
   --sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   color: var(--ink);
   background: var(--bg);
@@ -34,22 +34,22 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --foreground: #283618;
+  --card: #fffdf0;
+  --card-foreground: #283618;
+  --popover: #fffdf0;
+  --popover-foreground: #283618;
+  --primary: #283618;
+  --primary-foreground: #fefae0;
+  --secondary: #f5ecd0;
+  --secondary-foreground: #283618;
+  --muted-foreground: #606c38;
+  --accent: #dda15e;
+  --accent-foreground: #283618;
+  --destructive: #bc6c25;
+  --border: rgba(40, 54, 24, 0.18);
+  --input: rgba(40, 54, 24, 0.18);
+  --ring: #606c38;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -79,8 +79,8 @@ body {
   min-height: 100svh;
   margin: 0;
   background:
-    linear-gradient(115deg, rgba(247, 132, 158, 0.14), transparent 34%),
-    linear-gradient(180deg, #fffafb 0%, #fff5f7 52%, #ffedf2 100%);
+    linear-gradient(115deg, rgba(221, 161, 94, 0.16), transparent 34%),
+    linear-gradient(180deg, #fffdf0 0%, #fefae0 54%, #f6edcf 100%);
 }
 
 body::before {
@@ -89,8 +89,8 @@ body::before {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(117, 42, 65, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(117, 42, 65, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(40, 54, 24, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(40, 54, 24, 0.026) 1px, transparent 1px);
   background-size: 80px 80px;
   mask-image: linear-gradient(180deg, #000 0%, transparent 58%);
 }
@@ -102,7 +102,7 @@ input {
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: 'Inter Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

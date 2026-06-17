@@ -310,6 +310,10 @@ function App() {
 
     return Array.from({ length: 10 }, (_, index) => addHours(rounded, index + 1))
   }, [now])
+  const timelineGroups = useMemo(
+    () => Array.from({ length: 5 }, (_, index) => timeline.slice(index * 2, index * 2 + 2)),
+    [timeline],
+  )
 
   const currentStatus = getOverlapStatus(now)
 
@@ -380,28 +384,31 @@ function App() {
           <h2>Upcoming time windows</h2>
         </div>
 
-        <Card className="timeline-list">
-          {timeline.map((date) => {
-            const status = getOverlapStatus(date)
+        <div className="timeline-list">
+          {timelineGroups.map((group) => (
+            <Card className="timeline-card" key={group.map((date) => date.toISOString()).join('-')}>
+              {group.map((date) => {
+                const status = getOverlapStatus(date)
 
-            return (
-              <div className="timeline-row" key={date.toISOString()}>
-                <div>
-                  <strong>{formatTime(date, DENVER_TZ)}</strong>
-                  <span>Denver</span>
-                </div>
-                <div className="time-bridge"></div>
-                <div>
-                  <strong>{formatTime(date, ISTANBUL_TZ)}</strong>
-                  <span>Istanbul</span>
-                </div>
-                <Badge className={`row-status ${status.tone}`} variant="secondary">
-                  {status.label}
-                </Badge>
-              </div>
-            )
-          })}
-        </Card>
+                return (
+                  <div className="timeline-match" key={date.toISOString()}>
+                    <div>
+                      <span>Denver</span>
+                      <strong>{formatTime(date, DENVER_TZ)}</strong>
+                    </div>
+                    <div>
+                      <span>Istanbul</span>
+                      <strong>{formatTime(date, ISTANBUL_TZ)}</strong>
+                    </div>
+                    <Badge className={`row-status ${status.tone}`} variant="secondary">
+                      {status.label}
+                    </Badge>
+                  </div>
+                )
+              })}
+            </Card>
+          ))}
+        </div>
       </section>
     </main>
   )
