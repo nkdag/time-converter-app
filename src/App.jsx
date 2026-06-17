@@ -12,6 +12,10 @@ const TIME_FORMATS = {
   TWELVE: '12h',
   TWENTY_FOUR: '24h',
 }
+const CITY_KEYS = {
+  DENVER: 'denver',
+  ISTANBUL: 'istanbul',
+}
 
 const cities = {
   denver: {
@@ -27,6 +31,11 @@ const cities = {
     accent: 'TRT',
   },
 }
+
+const directions = [
+  { source: CITY_KEYS.DENVER, target: CITY_KEYS.ISTANBUL, label: 'Denver to Istanbul' },
+  { source: CITY_KEYS.ISTANBUL, target: CITY_KEYS.DENVER, label: 'Istanbul to Denver' },
+]
 
 const formatterCache = new Map()
 
@@ -69,6 +78,13 @@ function getZonedParts(date, timeZone) {
   }
 }
 
+function getZonedWeekday(date, timeZone) {
+  const value = getFormatter(timeZone, {
+    weekday: 'short',
+  }).format(date)
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(value)
+}
+
 function formatTime(date, timeZone, includeSeconds = false, timeFormat = TIME_FORMATS.TWELVE) {
   const use24Hour = timeFormat === TIME_FORMATS.TWENTY_FOUR
 
@@ -109,6 +125,7 @@ function parseInputValue(value) {
   const values = [year, month, day, hour, minute]
 
   if (values.some((item) => Number.isNaN(item))) return null
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null
 
   return { year, month, day, hour, minute }
 }
@@ -146,9 +163,29 @@ function localDateTimeToInstant(value, timeZone) {
 
 function toInputValue(date, timeZone) {
   const parts = getZonedParts(date, timeZone)
-  const pad = (value) => String(value).padStart(2, '0')
+  return inputFromParts(parts)
+}
 
+function inputFromParts(parts) {
+  const pad = (value) => String(value).padStart(2, '0')
   return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`
+}
+
+function inputFromDateAndTime(dateParts, hour, minute = 0) {
+  return inputFromParts({
+    ...dateParts,
+    hour,
+    minute,
+  })
+}
+
+function addDaysToParts(parts, days) {
+  const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days))
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  }
 }
 
 function getInputParts(value) {
@@ -212,22 +249,111 @@ function getOverlapStatus(date) {
   const istanbulHour = getHour(date, ISTANBUL_TZ)
   const denverAwake = denverHour >= 8 && denverHour < 23
   const istanbulAwake = istanbulHour >= 8 && istanbulHour < 23
-  const denverCozy = denverHour >= 10 && denverHour < 22
-  const istanbulCozy = istanbulHour >= 10 && istanbulHour < 22
+  const denverComfortable = denverHour >= 9 && denverHour < 22
+  const istanbulComfortable = istanbulHour >= 9 && istanbulHour < 22
 
-  if (denverCozy && istanbulCozy) {
-    return { tone: 'great', label: 'Great window', note: 'Both cities are in a comfortable daytime or evening window.' }
+  if (denverComfortable && istanbulComfortable) {
+    return { tone: 'great', label: 'Good for both', note: 'Both cities are in a comfortable window.' }
+  }
+
+  if (istanbulHour < 8) {
+    return { tone: 'late', label: 'Too early in Istanbul', note: 'Istanbul is likely too early.' }
+  }
+
+  if (istanbulHour >= 23) {
+    return { tone: 'late', label: 'Late in Istanbul', note: 'Istanbul is likely late.' }
+  }
+
+  if (denverHour < 8) {
+    return { tone: 'late', label: 'Too early in Denver', note: 'Denver is likely too early.' }
+  }
+
+  if (denverHour >= 23) {
+    return { tone: 'late', label: 'Late in Denver', note: 'Denver is likely late.' }
   }
 
   if (denverAwake && istanbulAwake) {
-    return { tone: 'ok', label: 'Possible', note: 'Both cities should be awake, but one side may be early or late.' }
+    return { tone: 'ok', label: 'Possible', note: 'Both cities should be awake.' }
   }
 
-  return { tone: 'late', label: 'Quiet hours', note: 'One city is likely outside a normal awake window.' }
+  return { tone: 'late', label: 'Possible', note: 'One city is outside a usual awake window.' }
 }
 
-function addHours(date, hours) {
-  return new Date(date.getTime() + hours * 60 * 60 * 1000)
+function getInitialState() {
+  const fallbackSource = CITY_KEYS.DENVER
+  const fallbackFormat = TIME_FORMATS.TWELVE
+  const fallbackInput = toInputValue(new Date(), cities[fallbackSource].zone)
+
+  if (typeof window === 'undefined') {
+    return {
+      sourceKey: fallbackSource,
+      timeFormat: fallbackFormat,
+      inputValue: fallbackInput,
+    }
+  }
+
+  const params = new URLSearchParams(window.location.search)
+  const sourceKey = Object.hasOwn(cities, params.get('from') ?? '')
+    ? params.get('from')
+    : fallbackSource
+  const timeFormat = Object.values(TIME_FORMATS).includes(params.get('format'))
+    ? params.get('format')
+    : fallbackFormat
+  const rawInput = params.get('at')
+  const inputValue =
+    rawInput && parseInputValue(rawInput) ? rawInput : toInputValue(new Date(), cities[sourceKey].zone)
+
+  return {
+    sourceKey,
+    timeFormat,
+    inputValue,
+  }
+}
+
+function shortcutInput(shortcut, sourceZone) {
+  const now = new Date()
+  const today = getZonedParts(now, sourceZone)
+  const todayDate = { year: today.year, month: today.month, day: today.day }
+
+  if (shortcut === 'now') return toInputValue(now, sourceZone)
+  if (shortcut === 'tonight') return inputFromDateAndTime(todayDate, 20)
+  if (shortcut === 'tomorrow') return inputFromDateAndTime(addDaysToParts(todayDate, 1), 9)
+
+  const weekday = getZonedWeekday(now, sourceZone)
+  const daysUntilSaturday = weekday === -1 ? 0 : (6 - weekday + 7) % 7
+  return inputFromDateAndTime(addDaysToParts(todayDate, daysUntilSaturday), 11)
+}
+
+function getBestSuggestions(inputValue, sourceKey) {
+  const source = cities[sourceKey]
+  const targetKey = sourceKey === CITY_KEYS.DENVER ? CITY_KEYS.ISTANBUL : CITY_KEYS.DENVER
+  const target = cities[targetKey]
+  const parsed = parseInputValue(inputValue)
+  const dateParts = parsed
+    ? { year: parsed.year, month: parsed.month, day: parsed.day }
+    : getZonedParts(new Date(), source.zone)
+
+  const scored = Array.from({ length: 17 }, (_, index) => index + 6)
+    .map((hour) => {
+      const value = inputFromDateAndTime(dateParts, hour)
+      const instant = localDateTimeToInstant(value, source.zone)
+      const status = instant ? getOverlapStatus(instant) : null
+      const targetHour = instant ? getHour(instant, target.zone) : 0
+      const score =
+        (status?.tone === 'great' ? 3 : 0) +
+        (status?.tone === 'ok' ? 1 : 0) -
+        Math.abs(targetHour - 19) / 10
+
+      return { value, instant, status, score }
+    })
+    .filter((item) => item.instant)
+    .sort((left, right) => right.score - left.score)
+
+  return scored.slice(0, 3).map((item) => ({
+    ...item,
+    source,
+    target,
+  }))
 }
 
 function CityClock({ city, now, timeFormat }) {
@@ -246,77 +372,124 @@ function CityClock({ city, now, timeFormat }) {
   )
 }
 
-function ConversionPanel({
-  title,
-  source,
-  target,
-  value,
-  onChange,
-  convertedDate,
-  timeFormat,
-}) {
-  const status = convertedDate
-    ? getOverlapStatus(convertedDate)
-    : { tone: 'late', label: 'Needs time', note: 'Enter a complete date and time.' }
+function DirectionToggle({ sourceKey, onChange }) {
+  return (
+    <div className="direction-toggle" aria-label="Conversion direction">
+      {directions.map((direction) => (
+        <Button
+          aria-pressed={sourceKey === direction.source}
+          className="direction-option"
+          key={direction.source}
+          type="button"
+          variant="secondary"
+          onClick={() => onChange(direction.source)}
+        >
+          {cities[direction.source].label}
+          <span>to</span>
+          {cities[direction.target].label}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
+function TimeEditor({ source, value, onChange }) {
   const inputParts = getInputParts(value)
   const timeControlParts = getTimeControlParts(value)
 
   return (
-    <Card className="converter-panel">
-      <div className="converter-heading">
-        <p className="panel-kicker">{title}</p>
+    <div className="time-editor" aria-label={`${source.label} date and time`}>
+      <Label>
+        <span>Date</span>
+        <Input
+          type="date"
+          value={inputParts.date}
+          onChange={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
+          onInput={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
+        />
+      </Label>
+      <div className="time-field">
+        <span>Time</span>
+        <div className="custom-time-control">
+          <Input
+            aria-label={`${source.label} hour`}
+            inputMode="numeric"
+            maxLength={2}
+            pattern="[0-9]*"
+            type="text"
+            value={timeControlParts.hour}
+            onChange={(event) => onChange(updateTimePart(value, 'hour', event.target.value))}
+          />
+          <span className="time-separator">:</span>
+          <Input
+            aria-label={`${source.label} minute`}
+            inputMode="numeric"
+            maxLength={2}
+            pattern="[0-9]*"
+            type="text"
+            value={timeControlParts.minute}
+            onChange={(event) => onChange(updateTimePart(value, 'minute', event.target.value))}
+          />
+        </div>
       </div>
-      <div className="conversion-flow">
-        <div className="city-converter source-converter">
+    </div>
+  )
+}
+
+function MainConverter({
+  sourceKey,
+  inputValue,
+  convertedDate,
+  timeFormat,
+  onDirectionChange,
+  onInputChange,
+}) {
+  const source = cities[sourceKey]
+  const targetKey = sourceKey === CITY_KEYS.DENVER ? CITY_KEYS.ISTANBUL : CITY_KEYS.DENVER
+  const target = cities[targetKey]
+  const status = convertedDate
+    ? getOverlapStatus(convertedDate)
+    : { tone: 'late', label: 'Needs time', note: 'Enter a complete date and time.' }
+  const shortcuts = [
+    { key: 'now', label: 'Now' },
+    { key: 'tonight', label: 'Tonight' },
+    { key: 'tomorrow', label: 'Tomorrow morning' },
+    { key: 'weekend', label: 'Weekend' },
+  ]
+
+  return (
+    <Card className="converter-panel main-converter-panel">
+      <div className="converter-heading">
+        <div>
+          <p className="panel-kicker">Check a time</p>
+          <h2>{source.label} to {target.label}</h2>
+        </div>
+        <DirectionToggle sourceKey={sourceKey} onChange={onDirectionChange} />
+      </div>
+
+      <div className="main-converter-grid">
+        <div className="source-editor">
           <div className="city-converter-head">
             <span>{source.country}</span>
             <strong>{source.label}</strong>
           </div>
-          <div className="date-time-control" aria-label={`${source.label} date and time`}>
-            <Label>
-              <span>Date</span>
-              <Input
-                type="date"
-                value={inputParts.date}
-                onChange={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
-                onInput={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
-              />
-            </Label>
-            <div className="time-field">
-              <span>Time</span>
-              <div className="custom-time-control">
-                <Input
-                  aria-label={`${source.label} hour`}
-                  inputMode="numeric"
-                  maxLength={2}
-                  pattern="[0-9]*"
-                  type="text"
-                  value={timeControlParts.hour}
-                  onChange={(event) => onChange(updateTimePart(value, 'hour', event.target.value))}
-                />
-                <span className="time-separator">:</span>
-                <Input
-                  aria-label={`${source.label} minute`}
-                  inputMode="numeric"
-                  maxLength={2}
-                  pattern="[0-9]*"
-                  type="text"
-                  value={timeControlParts.minute}
-                  onChange={(event) => onChange(updateTimePart(value, 'minute', event.target.value))}
-                />
-              </div>
-            </div>
-            <Button
-              className="date-now-button"
-              type="button"
-              variant="secondary"
-              onClick={() => onChange(toInputValue(new Date(), source.zone))}
-            >
-              Now
-            </Button>
+          <TimeEditor source={source} value={inputValue} onChange={onInputChange} />
+          <div className="shortcut-row" aria-label="Quick time shortcuts">
+            {shortcuts.map((shortcut) => (
+              <Button
+                className="shortcut-button"
+                key={shortcut.key}
+                type="button"
+                variant="secondary"
+                onClick={() => onInputChange(shortcutInput(shortcut.key, source.zone))}
+              >
+                {shortcut.label}
+              </Button>
+            ))}
           </div>
         </div>
-        <div className="city-converter result-converter">
+
+        <div className="result-converter">
           <div className="city-converter-head">
             <span>{target.country}</span>
             <strong>{target.label}</strong>
@@ -345,37 +518,75 @@ function ConversionPanel({
   )
 }
 
+function BestTimes({ suggestions, sourceKey, timeFormat, onSelect }) {
+  const source = cities[sourceKey]
+  const targetKey = sourceKey === CITY_KEYS.DENVER ? CITY_KEYS.ISTANBUL : CITY_KEYS.DENVER
+  const target = cities[targetKey]
+
+  return (
+    <section className="best-times-section" aria-label="Best time suggestions">
+      <div className="section-heading compact">
+        <p className="section-label">Best today</p>
+        <h2>Next good times</h2>
+      </div>
+
+      <Card className="best-times-list">
+        {suggestions.map((suggestion) => (
+          <button
+            className="best-time-row"
+            key={suggestion.value}
+            type="button"
+            onClick={() => onSelect(suggestion.value)}
+          >
+            <span className="best-city-time">
+              <small>{source.label}</small>
+              <strong>{formatTime(suggestion.instant, source.zone, false, timeFormat)}</strong>
+            </span>
+            <span className="best-city-time">
+              <small>{target.label}</small>
+              <strong>{formatTime(suggestion.instant, target.zone, false, timeFormat)}</strong>
+            </span>
+            <Badge className={`row-status ${suggestion.status.tone}`} variant="secondary">
+              {suggestion.status.label}
+            </Badge>
+          </button>
+        ))}
+      </Card>
+    </section>
+  )
+}
+
 function App() {
+  const initialState = useMemo(() => getInitialState(), [])
   const [now, setNow] = useState(() => new Date())
-  const [denverInput, setDenverInput] = useState(() => toInputValue(new Date(), DENVER_TZ))
-  const [istanbulInput, setIstanbulInput] = useState(() => toInputValue(new Date(), ISTANBUL_TZ))
-  const [timeFormat, setTimeFormat] = useState(TIME_FORMATS.TWELVE)
+  const [sourceKey, setSourceKey] = useState(initialState.sourceKey)
+  const [converterInput, setConverterInput] = useState(initialState.inputValue)
+  const [timeFormat, setTimeFormat] = useState(initialState.timeFormat)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(timer)
   }, [])
 
-  const denverConverted = useMemo(
-    () => localDateTimeToInstant(denverInput, DENVER_TZ),
-    [denverInput],
-  )
-  const istanbulConverted = useMemo(
-    () => localDateTimeToInstant(istanbulInput, ISTANBUL_TZ),
-    [istanbulInput],
-  )
+  useEffect(() => {
+    const params = new URLSearchParams({
+      from: sourceKey,
+      at: converterInput,
+      format: timeFormat,
+    })
+    const nextUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`
+    window.history.replaceState(null, '', nextUrl)
+  }, [converterInput, sourceKey, timeFormat])
 
-  const timeline = useMemo(() => {
-    const rounded = new Date(now)
-    rounded.setMinutes(0, 0, 0)
-
-    return Array.from({ length: 10 }, (_, index) => addHours(rounded, index + 1))
-  }, [now])
-  const timelineGroups = useMemo(
-    () => Array.from({ length: 5 }, (_, index) => timeline.slice(index * 2, index * 2 + 2)),
-    [timeline],
+  const source = cities[sourceKey]
+  const convertedDate = useMemo(
+    () => localDateTimeToInstant(converterInput, source.zone),
+    [converterInput, source.zone],
   )
-
+  const suggestions = useMemo(
+    () => getBestSuggestions(converterInput, sourceKey),
+    [converterInput, sourceKey],
+  )
   const currentStatus = getOverlapStatus(now)
 
   return (
@@ -410,16 +621,11 @@ function App() {
 
         <div className="hero-grid">
           <div className="hero-copy">
-            <p className="section-label">Denver · Istanbul</p>
-            <h1>Two cities, one shared time.</h1>
+            <h1>Two cities, one easy answer.</h1>
             <p>
-              Compare Denver and Istanbul with a warmer time-zone view for calls,
-              messages, family plans, and everyday check-ins.
+              Pick a time once, switch directions when you need to, and share the
+              exact Denver and Istanbul match from the URL.
             </p>
-            <div className="hero-meta" aria-label="Supported time zones">
-              <Badge variant="secondary">Comfortable overlap</Badge>
-              <Badge variant="secondary">Quiet-hour awareness</Badge>
-            </div>
           </div>
 
           <div className="live-clocks" aria-label="Live city clocks">
@@ -438,58 +644,22 @@ function App() {
       </section>
 
       <section id="converter" className="converter-grid">
-        <ConversionPanel
-          title="From Colorado"
-          source={cities.denver}
-          target={cities.istanbul}
-          value={denverInput}
-          onChange={setDenverInput}
-          convertedDate={denverConverted}
+        <MainConverter
+          sourceKey={sourceKey}
+          inputValue={converterInput}
+          convertedDate={convertedDate}
           timeFormat={timeFormat}
-        />
-        <ConversionPanel
-          title="From Turkey"
-          source={cities.istanbul}
-          target={cities.denver}
-          value={istanbulInput}
-          onChange={setIstanbulInput}
-          convertedDate={istanbulConverted}
-          timeFormat={timeFormat}
+          onDirectionChange={setSourceKey}
+          onInputChange={setConverterInput}
         />
       </section>
 
-      <section className="timeline-section">
-        <div className="section-heading">
-          <p className="section-label">Coming up</p>
-          <h2>Upcoming time windows</h2>
-        </div>
-
-        <div className="timeline-list">
-          {timelineGroups.map((group) => (
-            <Card className="timeline-card" key={group.map((date) => date.toISOString()).join('-')}>
-              {group.map((date) => {
-                const status = getOverlapStatus(date)
-
-                return (
-                  <div className="timeline-match" key={date.toISOString()}>
-                    <div>
-                      <span>Denver</span>
-                      <strong>{formatTime(date, DENVER_TZ, false, timeFormat)}</strong>
-                    </div>
-                    <div>
-                      <span>Istanbul</span>
-                      <strong>{formatTime(date, ISTANBUL_TZ, false, timeFormat)}</strong>
-                    </div>
-                    <Badge className={`row-status ${status.tone}`} variant="secondary">
-                      {status.label}
-                    </Badge>
-                  </div>
-                )
-              })}
-            </Card>
-          ))}
-        </div>
-      </section>
+      <BestTimes
+        suggestions={suggestions}
+        sourceKey={sourceKey}
+        timeFormat={timeFormat}
+        onSelect={setConverterInput}
+      />
     </main>
   )
 }
