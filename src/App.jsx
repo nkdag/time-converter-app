@@ -152,14 +152,14 @@ function getOverlapStatus(date) {
   const istanbulCozy = istanbulHour >= 10 && istanbulHour < 22
 
   if (denverCozy && istanbulCozy) {
-    return { tone: 'great', label: 'Sweet spot', note: 'A good time to call and actually talk.' }
+    return { tone: 'great', label: 'Great window', note: 'Both cities are in a comfortable daytime or evening window.' }
   }
 
   if (denverAwake && istanbulAwake) {
-    return { tone: 'ok', label: 'Text first', note: 'Both should be awake, but keep it gentle.' }
+    return { tone: 'ok', label: 'Possible', note: 'Both cities should be awake, but one side may be early or late.' }
   }
 
-  return { tone: 'late', label: 'Leave a note', note: 'One of you is probably sleeping or winding down.' }
+  return { tone: 'late', label: 'Quiet hours', note: 'One city is likely outside a normal awake window.' }
 }
 
 function addHours(date, hours) {
@@ -275,14 +275,14 @@ function App() {
         <div className="hero-grid">
           <div className="hero-copy">
             <p className="section-label">Denver · Istanbul</p>
-            <h1>Two hearts, two time zones.</h1>
+            <h1>Two cities, one shared time.</h1>
             <p>
-              See when it is a sweet moment to call, send a quick text, or leave a
-              little note between Denver and Istanbul.
+              Compare Denver and Istanbul with a warmer time-zone view for calls,
+              messages, family plans, and everyday check-ins.
             </p>
             <div className="hero-meta" aria-label="Supported time zones">
-              <span>Good call windows</span>
-              <span>Gentle late-night checks</span>
+              <span>Comfortable overlap</span>
+              <span>Quiet-hour awareness</span>
             </div>
           </div>
 
@@ -323,7 +323,7 @@ function App() {
       <section className="timeline-section">
         <div className="section-heading">
           <p className="section-label">Coming up</p>
-          <h2>Tiny windows for the two of you</h2>
+          <h2>Upcoming time windows</h2>
         </div>
 
         <div className="timeline-list">

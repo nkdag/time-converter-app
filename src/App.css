@@ -157,21 +157,6 @@
   pointer-events: none;
 }
 
-.clock-card::after {
-  content: '';
-  position: absolute;
-  right: 18px;
-  bottom: 18px;
-  width: 90px;
-  height: 90px;
-  border: 1px solid rgba(117, 42, 65, 0.11);
-  border-radius: 50%;
-  background:
-    linear-gradient(90deg, transparent 49%, rgba(117, 42, 65, 0.12) 50%, transparent 51%),
-    linear-gradient(0deg, transparent 49%, rgba(117, 42, 65, 0.12) 50%, transparent 51%);
-  opacity: 0.8;
-}
-
 .clock-topline,
 .clock-card h2,
 .clock-time,
