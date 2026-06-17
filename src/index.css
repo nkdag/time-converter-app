@@ -1,20 +1,20 @@
 :root {
-  --bg: #f7f8fb;
+  --bg: #fff6f8;
   --panel: rgba(255, 255, 255, 0.84);
   --panel-solid: #ffffff;
-  --field: #f9fbff;
-  --ink: #111827;
-  --muted: #647084;
-  --soft: #eef2f8;
-  --line: rgba(17, 24, 39, 0.1);
-  --line-strong: rgba(17, 24, 39, 0.18);
-  --blue: #2563eb;
-  --cyan: #0891b2;
-  --green: #13945f;
-  --amber: #c77c15;
-  --red: #c24136;
-  --shadow: 0 24px 70px rgba(31, 41, 55, 0.14);
-  --shadow-soft: 0 12px 36px rgba(31, 41, 55, 0.08);
+  --field: #fff8fa;
+  --ink: #2c1720;
+  --muted: #7c5d68;
+  --soft: #ffe8ee;
+  --line: rgba(117, 42, 65, 0.12);
+  --line-strong: rgba(117, 42, 65, 0.22);
+  --blue: #d94872;
+  --cyan: #ef7d98;
+  --green: #cf4f70;
+  --amber: #d46a52;
+  --red: #a83a50;
+  --shadow: 0 24px 70px rgba(117, 42, 65, 0.13);
+  --shadow-soft: 0 12px 36px rgba(117, 42, 65, 0.08);
   --sans:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -40,9 +40,9 @@ body {
   min-height: 100svh;
   margin: 0;
   background:
-    linear-gradient(115deg, rgba(37, 99, 235, 0.12), transparent 34%),
-    linear-gradient(250deg, rgba(8, 145, 178, 0.12), transparent 32%),
-    linear-gradient(180deg, #ffffff 0%, #f7f8fb 44%, #eef2f8 100%);
+    linear-gradient(115deg, rgba(247, 132, 158, 0.22), transparent 36%),
+    linear-gradient(250deg, rgba(210, 72, 105, 0.14), transparent 32%),
+    linear-gradient(180deg, #fffafb 0%, #fff3f6 48%, #ffe9ef 100%);
 }
 
 body::before {
@@ -51,8 +51,8 @@ body::before {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(17, 24, 39, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17, 24, 39, 0.055) 1px, transparent 1px);
+    linear-gradient(rgba(117, 42, 65, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 42, 65, 0.045) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: linear-gradient(180deg, #000 0%, transparent 72%);
 }

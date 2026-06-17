@@ -146,19 +146,20 @@ function getHour(date, timeZone) {
 function getOverlapStatus(date) {
   const denverHour = getHour(date, DENVER_TZ)
   const istanbulHour = getHour(date, ISTANBUL_TZ)
-  const denverWork = denverHour >= 8 && denverHour < 18
-  const istanbulWork = istanbulHour >= 8 && istanbulHour < 18
-  const istanbulAwake = istanbulHour >= 7 && istanbulHour < 23
+  const denverAwake = denverHour >= 8 && denverHour < 23
+  const istanbulAwake = istanbulHour >= 8 && istanbulHour < 23
+  const denverCozy = denverHour >= 10 && denverHour < 22
+  const istanbulCozy = istanbulHour >= 10 && istanbulHour < 22
 
-  if (denverWork && istanbulWork) {
-    return { tone: 'great', label: 'Best overlap', note: 'Both cities are in work hours.' }
+  if (denverCozy && istanbulCozy) {
+    return { tone: 'great', label: 'Sweet spot', note: 'A good time to call and actually talk.' }
   }
 
-  if (denverWork && istanbulAwake) {
-    return { tone: 'ok', label: 'Usable', note: 'Denver work hours, Istanbul evening.' }
+  if (denverAwake && istanbulAwake) {
+    return { tone: 'ok', label: 'Text first', note: 'Both should be awake, but keep it gentle.' }
   }
 
-  return { tone: 'late', label: 'Awkward', note: 'Likely outside a normal meeting window.' }
+  return { tone: 'late', label: 'Leave a note', note: 'One of you is probably sleeping or winding down.' }
 }
 
 function addHours(date, hours) {
@@ -198,7 +199,7 @@ function ConversionPanel({
       <div>
         <p className="panel-kicker">{title}</p>
         <h3>
-          {source.label} to {target.label}
+          When it is {source.label}
         </h3>
       </div>
       <label>
@@ -211,7 +212,7 @@ function ConversionPanel({
         />
       </label>
       <div className="result-box">
-        <span>{target.label}</span>
+        <span>It is {target.label}</span>
         {convertedDate ? (
           <>
             <strong>{formatTime(convertedDate, target.zone)}</strong>
@@ -265,23 +266,23 @@ function App() {
       <section className="hero-section">
         <nav className="nav-bar" aria-label="Primary">
           <div className="brand-block">
-            <div className="brand-mark">DI</div>
-            <span>Time Bridge</span>
+            <div className="brand-mark">TT</div>
+            <span>Time Together</span>
           </div>
-          <a href="#converter">Converter</a>
+          <a href="#converter">Check a time</a>
         </nav>
 
         <div className="hero-grid">
           <div className="hero-copy">
             <p className="section-label">Denver · Istanbul</p>
-            <h1>Two cities, one clear meeting time.</h1>
+            <h1>Two hearts, two time zones.</h1>
             <p>
-              Compare live clocks, convert either direction, and see whether a time
-              is friendly for both Denver and Istanbul.
+              See when it is a sweet moment to call, send a quick text, or leave a
+              little note between Denver and Istanbul.
             </p>
             <div className="hero-meta" aria-label="Supported time zones">
-              <span>America/Denver</span>
-              <span>Europe/Istanbul</span>
+              <span>Good call windows</span>
+              <span>Gentle late-night checks</span>
             </div>
           </div>
 
@@ -302,7 +303,7 @@ function App() {
 
       <section id="converter" className="converter-grid">
         <ConversionPanel
-          title="Plan from Colorado"
+          title="From Colorado"
           source={cities.denver}
           target={cities.istanbul}
           value={denverInput}
@@ -310,7 +311,7 @@ function App() {
           convertedDate={denverConverted}
         />
         <ConversionPanel
-          title="Plan from Turkey"
+          title="From Turkey"
           source={cities.istanbul}
           target={cities.denver}
           value={istanbulInput}
@@ -321,8 +322,8 @@ function App() {
 
       <section className="timeline-section">
         <div className="section-heading">
-          <p className="section-label">Next hours</p>
-          <h2>Quick comparison list</h2>
+          <p className="section-label">Coming up</p>
+          <h2>Tiny windows for the two of you</h2>
         </div>
 
         <div className="timeline-list">
