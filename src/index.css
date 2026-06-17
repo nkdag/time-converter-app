@@ -6,23 +6,23 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg: #fefae0;
-  --panel: rgba(254, 250, 224, 0.82);
-  --panel-solid: #fffdf0;
-  --field: #fffdf0;
-  --ink: #283618;
-  --app-muted: #606c38;
+  --bg: #f4ffd4;
+  --panel: rgba(244, 255, 212, 0.82);
+  --panel-solid: #fbffe9;
+  --field: #fbffe9;
+  --ink: #004b23;
+  --app-muted: #006400;
   --muted: oklch(0.97 0 0);
-  --soft: #f5ecd0;
-  --line: rgba(40, 54, 24, 0.13);
-  --line-strong: rgba(40, 54, 24, 0.24);
-  --blue: #606c38;
-  --cyan: #dda15e;
-  --green: #606c38;
-  --amber: #dda15e;
-  --red: #bc6c25;
-  --shadow: 0 14px 38px rgba(40, 54, 24, 0.08);
-  --shadow-soft: 0 8px 22px rgba(40, 54, 24, 0.06);
+  --soft: #e7ff8f;
+  --line: rgba(0, 75, 35, 0.14);
+  --line-strong: rgba(0, 75, 35, 0.26);
+  --blue: #007200;
+  --cyan: #70e000;
+  --green: #008000;
+  --amber: #9ef01a;
+  --red: #006400;
+  --shadow: 0 14px 38px rgba(0, 75, 35, 0.1);
+  --shadow-soft: 0 8px 22px rgba(0, 75, 35, 0.07);
   --sans:
     "Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -34,22 +34,22 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   --background: oklch(1 0 0);
-  --foreground: #283618;
-  --card: #fffdf0;
-  --card-foreground: #283618;
-  --popover: #fffdf0;
-  --popover-foreground: #283618;
-  --primary: #283618;
-  --primary-foreground: #fefae0;
-  --secondary: #f5ecd0;
-  --secondary-foreground: #283618;
-  --muted-foreground: #606c38;
-  --accent: #dda15e;
-  --accent-foreground: #283618;
-  --destructive: #bc6c25;
-  --border: rgba(40, 54, 24, 0.18);
-  --input: rgba(40, 54, 24, 0.18);
-  --ring: #606c38;
+  --foreground: #004b23;
+  --card: #fbffe9;
+  --card-foreground: #004b23;
+  --popover: #fbffe9;
+  --popover-foreground: #004b23;
+  --primary: #004b23;
+  --primary-foreground: #ccff33;
+  --secondary: #e7ff8f;
+  --secondary-foreground: #004b23;
+  --muted-foreground: #006400;
+  --accent: #70e000;
+  --accent-foreground: #004b23;
+  --destructive: #006400;
+  --border: rgba(0, 75, 35, 0.18);
+  --input: rgba(0, 75, 35, 0.18);
+  --ring: #008000;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -79,8 +79,8 @@ body {
   min-height: 100svh;
   margin: 0;
   background:
-    linear-gradient(115deg, rgba(221, 161, 94, 0.16), transparent 34%),
-    linear-gradient(180deg, #fffdf0 0%, #fefae0 54%, #f6edcf 100%);
+    linear-gradient(115deg, rgba(112, 224, 0, 0.2), transparent 34%),
+    linear-gradient(180deg, #fbffe9 0%, #f4ffd4 52%, #ccff33 145%);
 }
 
 body::before {
@@ -89,8 +89,8 @@ body::before {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(40, 54, 24, 0.026) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(40, 54, 24, 0.026) 1px, transparent 1px);
+    linear-gradient(rgba(0, 75, 35, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 75, 35, 0.026) 1px, transparent 1px);
   background-size: 80px 80px;
   mask-image: linear-gradient(180deg, #000 0%, transparent 58%);
 }
