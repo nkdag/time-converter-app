@@ -257,6 +257,10 @@ function stepTimePart(value, part, delta) {
   return `${date}T${pad(currentHour)}:${pad(nextMinute)}`
 }
 
+function addHours(date, hours) {
+  return new Date(date.getTime() + hours * 60 * 60 * 1000)
+}
+
 function getHour(date, timeZone) {
   return getZonedParts(date, timeZone).hour
 }
@@ -371,6 +375,19 @@ function getBestSuggestions(inputValue, sourceKey) {
     source,
     target,
   }))
+}
+
+function getUpcomingWindows(now) {
+  const rounded = new Date(now)
+  rounded.setMinutes(0, 0, 0)
+
+  return Array.from({ length: 3 }, (_, index) => {
+    const instant = addHours(rounded, index + 1)
+    return {
+      instant,
+      status: getOverlapStatus(instant),
+    }
+  })
 }
 
 function CityClock({ city, now, timeFormat }) {
@@ -622,36 +639,36 @@ function MainConverter({
   )
 }
 
-function BestTimes({ suggestions, sourceKey, timeFormat, onSelect }) {
+function BestTimes({ windows, sourceKey, timeFormat, onSelect }) {
   const source = cities[sourceKey]
   const targetKey = sourceKey === CITY_KEYS.DENVER ? CITY_KEYS.ISTANBUL : CITY_KEYS.DENVER
   const target = cities[targetKey]
 
   return (
-    <section className="best-times-section" aria-label="Best time suggestions">
+    <section className="best-times-section" aria-label="Upcoming time windows">
       <div className="section-heading compact">
-        <p className="section-label">Best today</p>
-        <h2>Next good times</h2>
+        <p className="section-label">Coming up</p>
+        <h2>Next 3 hours</h2>
       </div>
 
       <Card className="best-times-list">
-        {suggestions.map((suggestion) => (
+        {windows.map((window) => (
           <button
             className="best-time-row"
-            key={suggestion.value}
+            key={window.instant.toISOString()}
             type="button"
-            onClick={() => onSelect(suggestion.value)}
+            onClick={() => onSelect(toInputValue(window.instant, source.zone))}
           >
             <span className="best-city-time">
               <small>{source.label}</small>
-              <strong>{formatTime(suggestion.instant, source.zone, false, timeFormat)}</strong>
+              <strong>{formatTime(window.instant, source.zone, false, timeFormat)}</strong>
             </span>
             <span className="best-city-time">
               <small>{target.label}</small>
-              <strong>{formatTime(suggestion.instant, target.zone, false, timeFormat)}</strong>
+              <strong>{formatTime(window.instant, target.zone, false, timeFormat)}</strong>
             </span>
-            <Badge className={`row-status ${suggestion.status.tone}`} variant="secondary">
-              {suggestion.status.label}
+            <Badge className={`row-status ${window.status.tone}`} variant="secondary">
+              {window.status.label}
             </Badge>
           </button>
         ))}
@@ -691,6 +708,7 @@ function App() {
     () => getBestSuggestions(converterInput, sourceKey),
     [converterInput, sourceKey],
   )
+  const upcomingWindows = useMemo(() => getUpcomingWindows(now), [now])
   const currentStatus = getOverlapStatus(now)
 
   return (
@@ -760,7 +778,7 @@ function App() {
       </section>
 
       <BestTimes
-        suggestions={suggestions}
+        windows={upcomingWindows}
         sourceKey={sourceKey}
         timeFormat={timeFormat}
         onSelect={setConverterInput}
