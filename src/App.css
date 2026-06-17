@@ -254,7 +254,14 @@
   line-height: 1.08;
 }
 
-.converter-panel label {
+.date-time-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.date-time-control label {
   display: grid;
   gap: 8px;
   color: var(--muted);
@@ -262,7 +269,7 @@
   font-weight: 850;
 }
 
-.converter-panel input {
+.date-time-control input {
   width: 100%;
   min-height: 54px;
   box-sizing: border-box;
@@ -279,11 +286,38 @@
     background 160ms ease;
 }
 
-.converter-panel input:focus {
+.date-time-control input:focus {
   border-color: rgba(217, 72, 114, 0.72);
   outline: 0;
   box-shadow: 0 0 0 4px rgba(217, 72, 114, 0.14);
   background: #ffffff;
+}
+
+.date-time-control button {
+  min-height: 54px;
+  border: 1px solid rgba(217, 72, 114, 0.24);
+  border-radius: 8px;
+  padding: 0 15px;
+  color: #8a2b3f;
+  background: rgba(217, 72, 114, 0.08);
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.date-time-control button:hover {
+  border-color: rgba(217, 72, 114, 0.4);
+  background: rgba(217, 72, 114, 0.13);
+  transform: translateY(-1px);
+}
+
+.date-time-control button:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(217, 72, 114, 0.14);
 }
 
 .result-box {
@@ -517,6 +551,10 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .date-time-control {
+    grid-template-columns: 1fr;
   }
 
   .status-pill small {

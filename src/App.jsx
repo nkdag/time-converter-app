@@ -139,6 +139,22 @@ function toInputValue(date, timeZone) {
   return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`
 }
 
+function getInputParts(value) {
+  const [date = '', time = ''] = value.split('T')
+  return { date, time }
+}
+
+function updateInputPart(value, part, nextValue) {
+  const current = getInputParts(value)
+  const next = {
+    ...current,
+    [part]: nextValue,
+  }
+
+  if (!next.date && !next.time) return ''
+  return `${next.date}T${next.time}`
+}
+
 function getHour(date, timeZone) {
   return getZonedParts(date, timeZone).hour
 }
@@ -193,6 +209,7 @@ function ConversionPanel({
   const status = convertedDate
     ? getOverlapStatus(convertedDate)
     : { tone: 'late', label: 'Needs time', note: 'Enter a complete date and time.' }
+  const inputParts = getInputParts(value)
 
   return (
     <article className="converter-panel">
@@ -202,15 +219,29 @@ function ConversionPanel({
           When it is {source.label}
         </h3>
       </div>
-      <label>
-        <span>{source.label} date and time</span>
-        <input
-          type="datetime-local"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onInput={(event) => onChange(event.target.value)}
-        />
-      </label>
+      <div className="date-time-control" aria-label={`${source.label} date and time`}>
+        <label>
+          <span>Date</span>
+          <input
+            type="date"
+            value={inputParts.date}
+            onChange={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
+            onInput={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
+          />
+        </label>
+        <label>
+          <span>Time</span>
+          <input
+            type="time"
+            value={inputParts.time}
+            onChange={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
+            onInput={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
+          />
+        </label>
+        <button type="button" onClick={() => onChange(toInputValue(new Date(), source.zone))}>
+          Now
+        </button>
+      </div>
       <div className="result-box">
         <span>It is {target.label}</span>
         {convertedDate ? (
