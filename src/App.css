@@ -615,6 +615,19 @@
     gap: 8px;
   }
 
+  .conversion-flow {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .date-time-control {
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.65fr);
+  }
+
+  .date-now-button {
+    grid-column: 1 / -1;
+  }
+
   .section-heading {
     display: block;
   }
@@ -660,11 +673,6 @@
 
   .converter-panel {
     padding: 10px;
-  }
-
-  .conversion-flow {
-    grid-template-columns: 1fr;
-    gap: 8px;
   }
 
   .city-converter {
@@ -714,11 +722,7 @@
   }
 
   .date-time-control {
-    grid-template-columns: minmax(0, 1fr) minmax(118px, 0.72fr);
-  }
-
-  .date-now-button {
-    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
   }
 
   .custom-time-control {
