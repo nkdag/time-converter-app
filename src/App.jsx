@@ -1,4 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import './App.css'
 
 const DENVER_TZ = 'America/Denver'
@@ -184,7 +189,7 @@ function addHours(date, hours) {
 
 function CityClock({ city, now }) {
   return (
-    <article className="clock-card">
+    <Card className="clock-card">
       <div className="clock-topline">
         <span>{city.country}</span>
         <span>{formatOffset(now, city.zone)}</span>
@@ -194,7 +199,7 @@ function CityClock({ city, now }) {
       <p className="clock-date">
         {formatDate(now, city.zone)} · {city.accent}
       </p>
-    </article>
+    </Card>
   )
 }
 
@@ -212,7 +217,7 @@ function ConversionPanel({
   const inputParts = getInputParts(value)
 
   return (
-    <article className="converter-panel">
+    <Card className="converter-panel">
       <div>
         <p className="panel-kicker">{title}</p>
         <h3>
@@ -220,27 +225,32 @@ function ConversionPanel({
         </h3>
       </div>
       <div className="date-time-control" aria-label={`${source.label} date and time`}>
-        <label>
+        <Label>
           <span>Date</span>
-          <input
+          <Input
             type="date"
             value={inputParts.date}
             onChange={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
             onInput={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
           />
-        </label>
-        <label>
+        </Label>
+        <Label>
           <span>Time</span>
-          <input
+          <Input
             type="time"
             value={inputParts.time}
             onChange={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
             onInput={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
           />
-        </label>
-        <button type="button" onClick={() => onChange(toInputValue(new Date(), source.zone))}>
+        </Label>
+        <Button
+          className="date-now-button"
+          type="button"
+          variant="secondary"
+          onClick={() => onChange(toInputValue(new Date(), source.zone))}
+        >
           Now
-        </button>
+        </Button>
       </div>
       <div className="result-box">
         <span>It is {target.label}</span>
@@ -256,11 +266,11 @@ function ConversionPanel({
           </>
         )}
       </div>
-      <div className={`status-pill ${status.tone}`}>
+      <Badge className={`status-pill ${status.tone}`} variant="secondary">
         <span>{status.label}</span>
         <small>{status.note}</small>
-      </div>
-    </article>
+      </Badge>
+    </Card>
   )
 }
 
@@ -300,7 +310,9 @@ function App() {
             <div className="brand-mark">TT</div>
             <span>Time Together</span>
           </div>
-          <a href="#converter">Check a time</a>
+          <Button asChild className="nav-check-button" variant="outline">
+            <a href="#converter">Check a time</a>
+          </Button>
         </nav>
 
         <div className="hero-grid">
@@ -312,8 +324,8 @@ function App() {
               messages, family plans, and everyday check-ins.
             </p>
             <div className="hero-meta" aria-label="Supported time zones">
-              <span>Comfortable overlap</span>
-              <span>Quiet-hour awareness</span>
+              <Badge variant="secondary">Comfortable overlap</Badge>
+              <Badge variant="secondary">Quiet-hour awareness</Badge>
             </div>
           </div>
 
@@ -357,7 +369,7 @@ function App() {
           <h2>Upcoming time windows</h2>
         </div>
 
-        <div className="timeline-list">
+        <Card className="timeline-list">
           {timeline.map((date) => {
             const status = getOverlapStatus(date)
 
@@ -372,11 +384,13 @@ function App() {
                   <strong>{formatTime(date, ISTANBUL_TZ)}</strong>
                   <span>Istanbul</span>
                 </div>
-                <span className={`row-status ${status.tone}`}>{status.label}</span>
+                <Badge className={`row-status ${status.tone}`} variant="secondary">
+                  {status.label}
+                </Badge>
               </div>
             )
           })}
-        </div>
+        </Card>
       </section>
     </main>
   )
