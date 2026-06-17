@@ -156,18 +156,15 @@ function getInputParts(value) {
   return { date, time }
 }
 
-function getTimeControlParts(value, timeFormat) {
+function getTimeControlParts(value) {
   const { time } = getInputParts(value)
   const [rawHour = '0', rawMinute = '0'] = time.split(':')
   const hour24 = Math.min(23, Math.max(0, Number(rawHour) || 0))
   const minute = Math.min(59, Math.max(0, Number(rawMinute) || 0))
-  const is12Hour = timeFormat === TIME_FORMATS.TWELVE
-  const hour12 = hour24 % 12 || 12
 
   return {
-    hour: String(is12Hour ? hour12 : hour24).padStart(2, '0'),
+    hour: String(hour24).padStart(2, '0'),
     minute: String(minute).padStart(2, '0'),
-    period: hour24 >= 12 ? 'PM' : 'AM',
   }
 }
 
@@ -182,41 +179,24 @@ function updateInputPart(value, part, nextValue) {
   return `${next.date}T${next.time}`
 }
 
-function updateTimePart(value, part, nextValue, timeFormat) {
+function updateTimePart(value, part, nextValue) {
   const { date, time } = getInputParts(value)
   const [rawHour = '0', rawMinute = '0'] = time.split(':')
   const currentHour = Math.min(23, Math.max(0, Number(rawHour) || 0))
   const currentMinute = Math.min(59, Math.max(0, Number(rawMinute) || 0))
-  const currentPeriod = currentHour >= 12 ? 'PM' : 'AM'
-  const currentHour12 = currentHour % 12 || 12
   const nextDigits = String(nextValue).replace(/\D/g, '')
   let nextHour = currentHour
   let nextMinute = currentMinute
 
   if (part === 'hour') {
-    const limit = timeFormat === TIME_FORMATS.TWELVE ? 12 : 23
-    const minimum = timeFormat === TIME_FORMATS.TWELVE ? 1 : 0
-    const fallback = timeFormat === TIME_FORMATS.TWELVE ? currentHour12 : currentHour
+    const fallback = currentHour
     const parsed = Number(nextDigits || fallback)
-    const clampedHour = Math.min(limit, Math.max(minimum, Number.isNaN(parsed) ? fallback : parsed))
-
-    if (timeFormat === TIME_FORMATS.TWELVE) {
-      const hourBase = clampedHour === 12 ? 0 : clampedHour
-      nextHour = currentPeriod === 'PM' ? hourBase + 12 : hourBase
-    } else {
-      nextHour = clampedHour
-    }
+    nextHour = Math.min(23, Math.max(0, Number.isNaN(parsed) ? fallback : parsed))
   }
 
   if (part === 'minute') {
     const parsed = Number(nextDigits || currentMinute)
     nextMinute = Math.min(59, Math.max(0, Number.isNaN(parsed) ? currentMinute : parsed))
-  }
-
-  if (part === 'period') {
-    const nextPeriod = nextValue === 'PM' ? 'PM' : 'AM'
-    const hourBase = currentHour12 === 12 ? 0 : currentHour12
-    nextHour = nextPeriod === 'PM' ? hourBase + 12 : hourBase
   }
 
   const pad = (item) => String(item).padStart(2, '0')
@@ -279,7 +259,7 @@ function ConversionPanel({
     ? getOverlapStatus(convertedDate)
     : { tone: 'late', label: 'Needs time', note: 'Enter a complete date and time.' }
   const inputParts = getInputParts(value)
-  const timeControlParts = getTimeControlParts(value, timeFormat)
+  const timeControlParts = getTimeControlParts(value)
 
   return (
     <Card className="converter-panel">
@@ -312,7 +292,7 @@ function ConversionPanel({
                   pattern="[0-9]*"
                   type="text"
                   value={timeControlParts.hour}
-                  onChange={(event) => onChange(updateTimePart(value, 'hour', event.target.value, timeFormat))}
+                  onChange={(event) => onChange(updateTimePart(value, 'hour', event.target.value))}
                 />
                 <span className="time-separator">:</span>
                 <Input
@@ -322,25 +302,8 @@ function ConversionPanel({
                   pattern="[0-9]*"
                   type="text"
                   value={timeControlParts.minute}
-                  onChange={(event) => onChange(updateTimePart(value, 'minute', event.target.value, timeFormat))}
+                  onChange={(event) => onChange(updateTimePart(value, 'minute', event.target.value))}
                 />
-                {timeFormat === TIME_FORMATS.TWELVE ? (
-                  <div className="period-toggle" aria-label={`${source.label} period`}>
-                    {['AM', 'PM'].map((period) => (
-                      <Button
-                        aria-pressed={timeControlParts.period === period}
-                        className="period-option"
-                        key={period}
-                        size="xs"
-                        type="button"
-                        variant="secondary"
-                        onClick={() => onChange(updateTimePart(value, 'period', period, timeFormat))}
-                      >
-                        {period}
-                      </Button>
-                    ))}
-                  </div>
-                ) : null}
               </div>
             </div>
             <Button

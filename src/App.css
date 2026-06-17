@@ -52,8 +52,7 @@
   min-width: 0;
 }
 
-.format-toggle,
-.period-toggle {
+.format-toggle {
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -63,8 +62,7 @@
   padding: 3px;
 }
 
-.format-option,
-.period-option {
+.format-option {
   min-height: 26px;
   border-color: transparent;
   background: transparent;
@@ -73,8 +71,7 @@
   font-weight: 900;
 }
 
-.format-option[aria-pressed='true'],
-.period-option[aria-pressed='true'] {
+.format-option[aria-pressed='true'] {
   background: rgba(112, 224, 0, 0.22);
   color: var(--ink);
 }
@@ -374,7 +371,7 @@
 
 .custom-time-control {
   display: grid;
-  grid-template-columns: minmax(42px, 1fr) auto minmax(42px, 1fr) auto;
+  grid-template-columns: minmax(42px, 1fr) auto minmax(42px, 1fr);
   align-items: center;
   gap: 6px;
 }
@@ -666,6 +663,7 @@
   }
 
   .conversion-flow {
+    grid-template-columns: 1fr;
     gap: 8px;
   }
 
@@ -716,26 +714,15 @@
   }
 
   .date-time-control {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(118px, 0.72fr);
   }
 
   .date-now-button {
-    grid-column: auto;
+    grid-column: 1 / -1;
   }
 
   .custom-time-control {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  }
-
-  .period-toggle {
-    display: grid;
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
-  }
-
-  .period-option {
-    min-height: 25px;
   }
 
   .status-pill small {
