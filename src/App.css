@@ -233,7 +233,7 @@
 
 .converter-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -241,16 +241,63 @@
   padding: 16px;
 }
 
-.converter-panel h3 {
-  margin: 0 0 16px;
+.converter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.converter-heading .panel-kicker {
+  margin-bottom: 0;
+}
+
+.conversion-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.city-converter {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.city-converter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.city-converter-head span {
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.city-converter-head strong {
+  min-width: 0;
   color: var(--ink);
-  font-size: 21px;
-  line-height: 1.15;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 850;
+  overflow-wrap: anywhere;
 }
 
 .date-time-control {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px auto;
+  grid-template-columns: minmax(0, 1fr) 112px auto;
   align-items: end;
   gap: 8px;
 }
@@ -319,7 +366,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 12px;
   align-items: end;
-  margin: 14px 0 10px;
+  margin: 0;
   padding: 14px;
   border-radius: 8px;
   background:
@@ -479,8 +526,7 @@
     padding-top: 10px;
   }
 
-  .hero-grid,
-  .converter-grid {
+  .hero-grid {
     grid-template-columns: 1fr;
   }
 
@@ -540,6 +586,29 @@
     padding: 12px;
   }
 
+  .converter-panel {
+    padding: 10px;
+  }
+
+  .conversion-flow {
+    gap: 8px;
+  }
+
+  .city-converter {
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .city-converter-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .city-converter-head strong {
+    font-size: 17px;
+  }
+
   .clock-card h2 {
     font-size: 20px;
   }
@@ -572,16 +641,28 @@
   }
 
   .date-time-control {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .date-now-button {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .status-pill small {
-    max-width: none;
-    text-align: left;
+    display: none;
+  }
+
+  .result-box {
+    grid-template-columns: 1fr;
+    padding: 11px;
+  }
+
+  .result-box strong {
+    font-size: 23px;
+  }
+
+  .result-box small {
+    font-size: 11px;
   }
 
   .timeline-row {

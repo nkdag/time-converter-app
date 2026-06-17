@@ -218,58 +218,69 @@ function ConversionPanel({
 
   return (
     <Card className="converter-panel">
-      <div>
+      <div className="converter-heading">
         <p className="panel-kicker">{title}</p>
-        <h3>
-          When it is {source.label}
-        </h3>
       </div>
-      <div className="date-time-control" aria-label={`${source.label} date and time`}>
-        <Label>
-          <span>Date</span>
-          <Input
-            type="date"
-            value={inputParts.date}
-            onChange={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
-            onInput={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
-          />
-        </Label>
-        <Label>
-          <span>Time</span>
-          <Input
-            type="time"
-            value={inputParts.time}
-            onChange={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
-            onInput={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
-          />
-        </Label>
-        <Button
-          className="date-now-button"
-          type="button"
-          variant="secondary"
-          onClick={() => onChange(toInputValue(new Date(), source.zone))}
-        >
-          Now
-        </Button>
+      <div className="conversion-flow">
+        <div className="city-converter source-converter">
+          <div className="city-converter-head">
+            <span>{source.country}</span>
+            <strong>{source.label}</strong>
+          </div>
+          <div className="date-time-control" aria-label={`${source.label} date and time`}>
+            <Label>
+              <span>Date</span>
+              <Input
+                type="date"
+                value={inputParts.date}
+                onChange={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
+                onInput={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
+              />
+            </Label>
+            <Label>
+              <span>Time</span>
+              <Input
+                type="time"
+                value={inputParts.time}
+                onChange={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
+                onInput={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
+              />
+            </Label>
+            <Button
+              className="date-now-button"
+              type="button"
+              variant="secondary"
+              onClick={() => onChange(toInputValue(new Date(), source.zone))}
+            >
+              Now
+            </Button>
+          </div>
+        </div>
+        <div className="city-converter result-converter">
+          <div className="city-converter-head">
+            <span>{target.country}</span>
+            <strong>{target.label}</strong>
+          </div>
+          <div className="result-box">
+            <span>Converted time</span>
+            {convertedDate ? (
+              <>
+                <strong>{formatTime(convertedDate, target.zone)}</strong>
+                <small>{formatDate(convertedDate, target.zone)}</small>
+              </>
+            ) : (
+              <>
+                <strong>--:--</strong>
+                <small>Waiting for a valid time</small>
+              </>
+            )}
+          </div>
+          <Badge className={`status-pill ${status.tone}`} variant="secondary">
+            <span>{status.label}</span>
+            <small>{status.note}</small>
+          </Badge>
+        </div>
       </div>
-      <div className="result-box">
-        <span>It is {target.label}</span>
-        {convertedDate ? (
-          <>
-            <strong>{formatTime(convertedDate, target.zone)}</strong>
-            <small>{formatDate(convertedDate, target.zone)}</small>
-          </>
-        ) : (
-          <>
-            <strong>--:--</strong>
-            <small>Waiting for a valid time</small>
-          </>
-        )}
-      </div>
-      <Badge className={`status-pill ${status.tone}`} variant="secondary">
-        <span>{status.label}</span>
-        <small>{status.note}</small>
-      </Badge>
     </Card>
   )
 }
