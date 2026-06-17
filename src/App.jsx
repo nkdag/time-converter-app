@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Minus, Plus } from 'lucide-react'
 import './App.css'
 
 const DENVER_TZ = 'America/Denver'
@@ -240,6 +241,22 @@ function updateTimePart(value, part, nextValue) {
   return `${date}T${pad(nextHour)}:${pad(nextMinute)}`
 }
 
+function stepTimePart(value, part, delta) {
+  const { date, time } = getInputParts(value)
+  const [rawHour = '0', rawMinute = '0'] = time.split(':')
+  const currentHour = Math.min(23, Math.max(0, Number(rawHour) || 0))
+  const currentMinute = Math.min(59, Math.max(0, Number(rawMinute) || 0))
+  const pad = (item) => String(item).padStart(2, '0')
+
+  if (part === 'hour') {
+    const nextHour = (currentHour + delta + 24) % 24
+    return `${date}T${pad(nextHour)}:${pad(currentMinute)}`
+  }
+
+  const nextMinute = (currentMinute + delta + 60) % 60
+  return `${date}T${pad(currentHour)}:${pad(nextMinute)}`
+}
+
 function getHour(date, timeZone) {
   return getZonedParts(date, timeZone).hour
 }
@@ -420,6 +437,11 @@ function TimeEditor({ source, value, onChange }) {
     setActiveTimePart(null)
   }
 
+  const handleStep = (part, delta) => {
+    setActiveTimePart(null)
+    onChange(stepTimePart(value, part, delta))
+  }
+
   return (
     <div className="time-editor" aria-label={`${source.label} date and time`}>
       <Label>
@@ -434,29 +456,69 @@ function TimeEditor({ source, value, onChange }) {
       <div className="time-field">
         <span>Time</span>
         <div className="custom-time-control">
-          <Input
-            aria-label={`${source.label} hour`}
-            inputMode="numeric"
-            maxLength={2}
-            pattern="[0-9]*"
-            type="text"
-            value={activeTimePart === 'hour' ? timeDraft.hour : timeControlParts.hour}
-            onBlur={handleTimeBlur}
-            onChange={(event) => handleTimeChange('hour', event.target.value)}
-            onFocus={(event) => handleTimeFocus(event, 'hour')}
-          />
+          <div className="time-stepper">
+            <Button
+              aria-label="Decrease hour"
+              className="time-step-button"
+              type="button"
+              variant="secondary"
+              onClick={() => handleStep('hour', -1)}
+            >
+              <Minus size={13} strokeWidth={3} />
+            </Button>
+            <Input
+              aria-label={`${source.label} hour`}
+              inputMode="numeric"
+              maxLength={2}
+              pattern="[0-9]*"
+              type="text"
+              value={activeTimePart === 'hour' ? timeDraft.hour : timeControlParts.hour}
+              onBlur={handleTimeBlur}
+              onChange={(event) => handleTimeChange('hour', event.target.value)}
+              onFocus={(event) => handleTimeFocus(event, 'hour')}
+            />
+            <Button
+              aria-label="Increase hour"
+              className="time-step-button"
+              type="button"
+              variant="secondary"
+              onClick={() => handleStep('hour', 1)}
+            >
+              <Plus size={13} strokeWidth={3} />
+            </Button>
+          </div>
           <span className="time-separator">:</span>
-          <Input
-            aria-label={`${source.label} minute`}
-            inputMode="numeric"
-            maxLength={2}
-            pattern="[0-9]*"
-            type="text"
-            value={activeTimePart === 'minute' ? timeDraft.minute : timeControlParts.minute}
-            onBlur={handleTimeBlur}
-            onChange={(event) => handleTimeChange('minute', event.target.value)}
-            onFocus={(event) => handleTimeFocus(event, 'minute')}
-          />
+          <div className="time-stepper">
+            <Button
+              aria-label="Decrease minute"
+              className="time-step-button"
+              type="button"
+              variant="secondary"
+              onClick={() => handleStep('minute', -5)}
+            >
+              <Minus size={13} strokeWidth={3} />
+            </Button>
+            <Input
+              aria-label={`${source.label} minute`}
+              inputMode="numeric"
+              maxLength={2}
+              pattern="[0-9]*"
+              type="text"
+              value={activeTimePart === 'minute' ? timeDraft.minute : timeControlParts.minute}
+              onBlur={handleTimeBlur}
+              onChange={(event) => handleTimeChange('minute', event.target.value)}
+              onFocus={(event) => handleTimeFocus(event, 'minute')}
+            />
+            <Button
+              aria-label="Increase minute"
+              className="time-step-button"
+              type="button"
+              variant="secondary"
+              onClick={() => handleStep('minute', 5)}
+            >
+              <Plus size={13} strokeWidth={3} />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -470,6 +532,7 @@ function MainConverter({
   timeFormat,
   onDirectionChange,
   onInputChange,
+  trySuggestion,
 }) {
   const source = cities[sourceKey]
   const targetKey = sourceKey === CITY_KEYS.DENVER ? CITY_KEYS.ISTANBUL : CITY_KEYS.DENVER
@@ -497,7 +560,7 @@ function MainConverter({
       <div className="main-converter-grid">
         <div className="source-editor">
           <div className="city-converter-head">
-            <span>{source.country}</span>
+            <span>Your time · {source.country}</span>
             <strong>{source.label}</strong>
           </div>
           <TimeEditor source={source} value={inputValue} onChange={onInputChange} />
@@ -518,7 +581,7 @@ function MainConverter({
 
         <div className="result-converter">
           <div className="city-converter-head">
-            <span>{target.country}</span>
+            <span>Their time · {target.country}</span>
             <strong>{target.label}</strong>
           </div>
           <div className="result-box">
@@ -539,6 +602,20 @@ function MainConverter({
             <span>{status.label}</span>
             <small>{status.note}</small>
           </Badge>
+          {trySuggestion && status.tone !== 'great' ? (
+            <button
+              className="try-time-card"
+              type="button"
+              onClick={() => onInputChange(trySuggestion.value)}
+            >
+              <span>Try this time</span>
+              <strong>
+                {source.label} {formatTime(trySuggestion.instant, source.zone, false, timeFormat)}
+                {' / '}
+                {target.label} {formatTime(trySuggestion.instant, target.zone, false, timeFormat)}
+              </strong>
+            </button>
+          ) : null}
         </div>
       </div>
     </Card>
@@ -678,6 +755,7 @@ function App() {
           timeFormat={timeFormat}
           onDirectionChange={setSourceKey}
           onInputChange={setConverterInput}
+          trySuggestion={suggestions[0]}
         />
       </section>
 
