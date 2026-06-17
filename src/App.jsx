@@ -8,6 +8,10 @@ import './App.css'
 
 const DENVER_TZ = 'America/Denver'
 const ISTANBUL_TZ = 'Europe/Istanbul'
+const TIME_FORMATS = {
+  TWELVE: '12h',
+  TWENTY_FOUR: '24h',
+}
 
 const cities = {
   denver: {
@@ -65,12 +69,15 @@ function getZonedParts(date, timeZone) {
   }
 }
 
-function formatTime(date, timeZone, includeSeconds = false) {
+function formatTime(date, timeZone, includeSeconds = false, timeFormat = TIME_FORMATS.TWELVE) {
+  const use24Hour = timeFormat === TIME_FORMATS.TWENTY_FOUR
+
   return getFormatter(timeZone, {
-    hour: 'numeric',
+    hour: use24Hour ? '2-digit' : 'numeric',
     minute: '2-digit',
     second: includeSeconds ? '2-digit' : undefined,
-    hour12: true,
+    hour12: !use24Hour,
+    hourCycle: use24Hour ? 'h23' : undefined,
   }).format(date)
 }
 
@@ -149,6 +156,21 @@ function getInputParts(value) {
   return { date, time }
 }
 
+function getTimeControlParts(value, timeFormat) {
+  const { time } = getInputParts(value)
+  const [rawHour = '0', rawMinute = '0'] = time.split(':')
+  const hour24 = Math.min(23, Math.max(0, Number(rawHour) || 0))
+  const minute = Math.min(59, Math.max(0, Number(rawMinute) || 0))
+  const is12Hour = timeFormat === TIME_FORMATS.TWELVE
+  const hour12 = hour24 % 12 || 12
+
+  return {
+    hour: String(is12Hour ? hour12 : hour24).padStart(2, '0'),
+    minute: String(minute).padStart(2, '0'),
+    period: hour24 >= 12 ? 'PM' : 'AM',
+  }
+}
+
 function updateInputPart(value, part, nextValue) {
   const current = getInputParts(value)
   const next = {
@@ -158,6 +180,47 @@ function updateInputPart(value, part, nextValue) {
 
   if (!next.date && !next.time) return ''
   return `${next.date}T${next.time}`
+}
+
+function updateTimePart(value, part, nextValue, timeFormat) {
+  const { date, time } = getInputParts(value)
+  const [rawHour = '0', rawMinute = '0'] = time.split(':')
+  const currentHour = Math.min(23, Math.max(0, Number(rawHour) || 0))
+  const currentMinute = Math.min(59, Math.max(0, Number(rawMinute) || 0))
+  const currentPeriod = currentHour >= 12 ? 'PM' : 'AM'
+  const currentHour12 = currentHour % 12 || 12
+  const nextDigits = String(nextValue).replace(/\D/g, '')
+  let nextHour = currentHour
+  let nextMinute = currentMinute
+
+  if (part === 'hour') {
+    const limit = timeFormat === TIME_FORMATS.TWELVE ? 12 : 23
+    const minimum = timeFormat === TIME_FORMATS.TWELVE ? 1 : 0
+    const fallback = timeFormat === TIME_FORMATS.TWELVE ? currentHour12 : currentHour
+    const parsed = Number(nextDigits || fallback)
+    const clampedHour = Math.min(limit, Math.max(minimum, Number.isNaN(parsed) ? fallback : parsed))
+
+    if (timeFormat === TIME_FORMATS.TWELVE) {
+      const hourBase = clampedHour === 12 ? 0 : clampedHour
+      nextHour = currentPeriod === 'PM' ? hourBase + 12 : hourBase
+    } else {
+      nextHour = clampedHour
+    }
+  }
+
+  if (part === 'minute') {
+    const parsed = Number(nextDigits || currentMinute)
+    nextMinute = Math.min(59, Math.max(0, Number.isNaN(parsed) ? currentMinute : parsed))
+  }
+
+  if (part === 'period') {
+    const nextPeriod = nextValue === 'PM' ? 'PM' : 'AM'
+    const hourBase = currentHour12 === 12 ? 0 : currentHour12
+    nextHour = nextPeriod === 'PM' ? hourBase + 12 : hourBase
+  }
+
+  const pad = (item) => String(item).padStart(2, '0')
+  return `${date}T${pad(nextHour)}:${pad(nextMinute)}`
 }
 
 function getHour(date, timeZone) {
@@ -187,7 +250,7 @@ function addHours(date, hours) {
   return new Date(date.getTime() + hours * 60 * 60 * 1000)
 }
 
-function CityClock({ city, now }) {
+function CityClock({ city, now, timeFormat }) {
   return (
     <Card className="clock-card">
       <div className="clock-topline">
@@ -195,7 +258,7 @@ function CityClock({ city, now }) {
         <span>{formatOffset(now, city.zone)}</span>
       </div>
       <h2>{city.label}</h2>
-      <p className="clock-time">{formatTime(now, city.zone, true)}</p>
+      <p className="clock-time">{formatTime(now, city.zone, true, timeFormat)}</p>
       <p className="clock-date">
         {formatDate(now, city.zone)} · {city.accent}
       </p>
@@ -210,11 +273,13 @@ function ConversionPanel({
   value,
   onChange,
   convertedDate,
+  timeFormat,
 }) {
   const status = convertedDate
     ? getOverlapStatus(convertedDate)
     : { tone: 'late', label: 'Needs time', note: 'Enter a complete date and time.' }
   const inputParts = getInputParts(value)
+  const timeControlParts = getTimeControlParts(value, timeFormat)
 
   return (
     <Card className="converter-panel">
@@ -237,15 +302,47 @@ function ConversionPanel({
                 onInput={(event) => onChange(updateInputPart(value, 'date', event.target.value))}
               />
             </Label>
-            <Label>
+            <div className="time-field">
               <span>Time</span>
-              <Input
-                type="time"
-                value={inputParts.time}
-                onChange={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
-                onInput={(event) => onChange(updateInputPart(value, 'time', event.target.value))}
-              />
-            </Label>
+              <div className="custom-time-control">
+                <Input
+                  aria-label={`${source.label} hour`}
+                  inputMode="numeric"
+                  maxLength={2}
+                  pattern="[0-9]*"
+                  type="text"
+                  value={timeControlParts.hour}
+                  onChange={(event) => onChange(updateTimePart(value, 'hour', event.target.value, timeFormat))}
+                />
+                <span className="time-separator">:</span>
+                <Input
+                  aria-label={`${source.label} minute`}
+                  inputMode="numeric"
+                  maxLength={2}
+                  pattern="[0-9]*"
+                  type="text"
+                  value={timeControlParts.minute}
+                  onChange={(event) => onChange(updateTimePart(value, 'minute', event.target.value, timeFormat))}
+                />
+                {timeFormat === TIME_FORMATS.TWELVE ? (
+                  <div className="period-toggle" aria-label={`${source.label} period`}>
+                    {['AM', 'PM'].map((period) => (
+                      <Button
+                        aria-pressed={timeControlParts.period === period}
+                        className="period-option"
+                        key={period}
+                        size="xs"
+                        type="button"
+                        variant="secondary"
+                        onClick={() => onChange(updateTimePart(value, 'period', period, timeFormat))}
+                      >
+                        {period}
+                      </Button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
             <Button
               className="date-now-button"
               type="button"
@@ -265,7 +362,7 @@ function ConversionPanel({
             <span>Converted time</span>
             {convertedDate ? (
               <>
-                <strong>{formatTime(convertedDate, target.zone)}</strong>
+                <strong>{formatTime(convertedDate, target.zone, false, timeFormat)}</strong>
                 <small>{formatDate(convertedDate, target.zone)}</small>
               </>
             ) : (
@@ -289,6 +386,7 @@ function App() {
   const [now, setNow] = useState(() => new Date())
   const [denverInput, setDenverInput] = useState(() => toInputValue(new Date(), DENVER_TZ))
   const [istanbulInput, setIstanbulInput] = useState(() => toInputValue(new Date(), ISTANBUL_TZ))
+  const [timeFormat, setTimeFormat] = useState(TIME_FORMATS.TWELVE)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000)
@@ -325,9 +423,26 @@ function App() {
             <div className="brand-mark">TT</div>
             <span>Time Together</span>
           </div>
-          <Button asChild className="nav-check-button" variant="outline">
-            <a href="#converter">Check a time</a>
-          </Button>
+          <div className="nav-actions">
+            <div className="format-toggle" aria-label="Time format">
+              {Object.values(TIME_FORMATS).map((format) => (
+                <Button
+                  aria-pressed={timeFormat === format}
+                  className="format-option"
+                  key={format}
+                  size="xs"
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setTimeFormat(format)}
+                >
+                  {format}
+                </Button>
+              ))}
+            </div>
+            <Button asChild className="nav-check-button" variant="outline">
+              <a href="#converter">Check a time</a>
+            </Button>
+          </div>
         </nav>
 
         <div className="hero-grid">
@@ -345,8 +460,8 @@ function App() {
           </div>
 
           <div className="live-clocks" aria-label="Live city clocks">
-            <CityClock city={cities.denver} now={now} />
-            <CityClock city={cities.istanbul} now={now} />
+            <CityClock city={cities.denver} now={now} timeFormat={timeFormat} />
+            <CityClock city={cities.istanbul} now={now} timeFormat={timeFormat} />
           </div>
         </div>
       </section>
@@ -367,6 +482,7 @@ function App() {
           value={denverInput}
           onChange={setDenverInput}
           convertedDate={denverConverted}
+          timeFormat={timeFormat}
         />
         <ConversionPanel
           title="From Turkey"
@@ -375,6 +491,7 @@ function App() {
           value={istanbulInput}
           onChange={setIstanbulInput}
           convertedDate={istanbulConverted}
+          timeFormat={timeFormat}
         />
       </section>
 
@@ -394,11 +511,11 @@ function App() {
                   <div className="timeline-match" key={date.toISOString()}>
                     <div>
                       <span>Denver</span>
-                      <strong>{formatTime(date, DENVER_TZ)}</strong>
+                      <strong>{formatTime(date, DENVER_TZ, false, timeFormat)}</strong>
                     </div>
                     <div>
                       <span>Istanbul</span>
-                      <strong>{formatTime(date, ISTANBUL_TZ)}</strong>
+                      <strong>{formatTime(date, ISTANBUL_TZ, false, timeFormat)}</strong>
                     </div>
                     <Badge className={`row-status ${status.tone}`} variant="secondary">
                       {status.label}
