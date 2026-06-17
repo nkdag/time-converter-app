@@ -396,6 +396,29 @@ function DirectionToggle({ sourceKey, onChange }) {
 function TimeEditor({ source, value, onChange }) {
   const inputParts = getInputParts(value)
   const timeControlParts = getTimeControlParts(value)
+  const [activeTimePart, setActiveTimePart] = useState(null)
+  const [timeDraft, setTimeDraft] = useState(timeControlParts)
+
+  const handleTimeFocus = (event, part) => {
+    setActiveTimePart(part)
+    setTimeDraft(timeControlParts)
+    event.target.select()
+  }
+
+  const handleTimeChange = (part, rawValue) => {
+    const digits = rawValue.replace(/\D/g, '').slice(0, 2)
+    setTimeDraft((current) => ({
+      ...current,
+      [part]: digits,
+    }))
+
+    if (!digits) return
+    onChange(updateTimePart(value, part, digits))
+  }
+
+  const handleTimeBlur = () => {
+    setActiveTimePart(null)
+  }
 
   return (
     <div className="time-editor" aria-label={`${source.label} date and time`}>
@@ -417,8 +440,10 @@ function TimeEditor({ source, value, onChange }) {
             maxLength={2}
             pattern="[0-9]*"
             type="text"
-            value={timeControlParts.hour}
-            onChange={(event) => onChange(updateTimePart(value, 'hour', event.target.value))}
+            value={activeTimePart === 'hour' ? timeDraft.hour : timeControlParts.hour}
+            onBlur={handleTimeBlur}
+            onChange={(event) => handleTimeChange('hour', event.target.value)}
+            onFocus={(event) => handleTimeFocus(event, 'hour')}
           />
           <span className="time-separator">:</span>
           <Input
@@ -427,8 +452,10 @@ function TimeEditor({ source, value, onChange }) {
             maxLength={2}
             pattern="[0-9]*"
             type="text"
-            value={timeControlParts.minute}
-            onChange={(event) => onChange(updateTimePart(value, 'minute', event.target.value))}
+            value={activeTimePart === 'minute' ? timeDraft.minute : timeControlParts.minute}
+            onBlur={handleTimeBlur}
+            onChange={(event) => handleTimeChange('minute', event.target.value)}
+            onFocus={(event) => handleTimeFocus(event, 'minute')}
           />
         </div>
       </div>
